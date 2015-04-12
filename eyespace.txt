@@ -1,0 +1,290 @@
+*MULTIMEDIA UNIVERSITY - PROJECT
+
+The code is the work of:
+1. Edwin Kirui
+2. ISANYA HILLARY
+3. OTUYA DAVID
+4. BRIAN MULUNDA
+5. BRIGHTON OOKO
+6. MUNYAO FRANCIS  
+7. MERCY TUM
+8. FAITH MAINA
+9. TUM NELSON
+10. KISUNDU NICHOLAS
+11.STEPHEN KYALO
+
+Under the supervision of Mr. KELVIN KARIUKI.
+
+The code controls the functions of a robot that detects its environment ,takes photographs and uploads them to our web services.
+The robot senses objects around its environment using an 
+ultra sonic sensor and calculates the left and right distances
+and steers to the direction with the largest object clearance distance.
+It employs an Arduino MEGA 2560 microncontroller.The robot takes photographs using proximity sensors of the phone that has been mounted on it.Once a photo has been taken ,it begins to be uploaded to the server.Programmers are also notofied when an object has been detected
+*/
+
+#include <Servo.h> //Servo motor header file
+
+int servoPin = 5; //servo control pin on 2560
+
+int triggerPin = 46; //HC-SR04 trigger pin
+
+int echoPin = 34; //HC-SR04 echo pin
+
+int angle = 0; //holds the angle of thep servo motor
+
+long duration, frontDistance; //variables to hold the duration and distance
+
+int leftDistance = 0, rightDistance = 0; //holds the left and right object distances
+
+int turnDelay = 500; //delay to facilitate turning the robot
+
+int detectionDistance = 80; //detection set to half a meter (30 cm)
+
+//Driving motor A
+int IN1 = 22;
+
+int IN2 = 24;
+
+int ENA = 3;
+
+//Driving motor B
+int IN3 = 28;
+
+int IN4 = 32;
+
+int ENB = 4;
+
+
+//Servo object
+Servo myservo;
+
+void setup()
+{
+  Serial.begin(9600);
+  
+  pinMode(IN1, OUTPUT);
+  
+  pinMode(IN2, OUTPUT);
+  
+  pinMode(ENA, OUTPUT);
+  
+  pinMode(IN3, OUTPUT);
+  
+  pinMode(IN4, OUTPUT);
+  
+  pinMode(ENB, OUTPUT);
+  
+  pinMode(triggerPin, OUTPUT); //trigger pin as output
+  
+  pinMode(echoPin, INPUT); //echo pin as input
+  
+  myservo.attach(servoPin); //attach the servo pin
+  
+  angle = 75; //sensor facing front
+  
+  myservo.write(angle); //turn servo motor to 75 degrees
+  
+} //setup function
+
+void loop()
+{ 
+  robotForward(); //moves the robot forward
+  
+  if (measureFrontObjectDistance() >= detectionDistance)
+  {
+    delay(100);
+    
+    return; //exit loop function
+    
+  } //if statement
+  
+  stallRobot(); //stall the robot(to make object stop)
+  
+  delay(100);
+
+  //Turn the ultrasonic sensor to the left from 75 degrees (front)
+  for (; angle < 180; angle++)
+  {
+    myservo.write(angle); //output current angle to the servo motor
+    
+    delay(10); //delay 10ms
+    
+  } // for loop
+  
+  //angle = 179 at this point
+  
+  //function for reading the distance
+  
+  measureLeftObjectDistance();
+  
+  //Turn the ultrasonic sensor to the right from left
+  for (; angle >= 0; angle--)
+  {
+    myservo.write(angle); //output current angle to the servo motor
+    
+    delay(10); //delay 10ms
+    
+  } // for loop
+  
+  //angle = 0 at this point
+  
+  measureRightObjectDistance();
+  
+  //Turn servo from Right to 90 degrees (front)
+  for (; angle <= 75; angle++)
+  {
+    myservo.write(angle); //output current angle to the servo motor
+    
+    delay(10); //delay 10ms
+    
+  } //for loop
+  
+  //angle = 75 degrees
+  
+  //Comparie the right and left distances, decide which direction to turn
+  
+  
+  
+  if (rightDistance > leftDistance)
+  {
+    turnRight();
+  }
+  else if (leftDistance > rightDistance)
+  {
+    turnLeft();
+  }
+  
+} //loop function
+
+void measureLeftObjectDistance()
+{
+  leftDistance = measureDistance();
+  Serial.print("Left Distance ");
+  Serial.println(leftDistance);
+  
+} //left object distance
+
+void measureRightObjectDistance()
+{
+  rightDistance = measureDistance();
+  Serial.print("Right Distance ");
+  Serial.println(rightDistance);
+} //right object distance
+
+int measureFrontObjectDistance()
+{
+  frontDistance = measureDistance();
+  Serial.print("Front Distance ");
+  Serial.println(frontDistance);
+  return frontDistance;
+} //front object distance
+
+int measureDistance()
+{
+  digitalWrite(triggerPin, LOW); //set the trigger pin low
+  
+  delayMicroseconds(2); //hold the trigger Pin low
+  
+  digitalWrite(triggerPin, HIGH); //set the trigger pin high
+  
+  delayMicroseconds(10); //hold it high for 10us
+  
+  digitalWrite(triggerPin, LOW); //set trigger pin to low
+  
+  duration = pulseIn(echoPin, HIGH); //read the duration
+  
+  return ((duration / 2) / 29.1); //distance in cm of the object
+  
+} //measure distance
+
+//Functions for driving Motors
+
+//Motor forward
+void motorForwardA()
+{
+  digitalWrite(IN1, LOW);
+  
+  digitalWrite(IN2, HIGH);
+} //forward motor A
+
+void motorForwardB()
+{
+  digitalWrite(IN3, HIGH);
+  
+  digitalWrite(IN4, LOW);
+} //forward motor B
+
+void motorReverseA()
+{
+  digitalWrite(IN1, HIGH);
+  
+  digitalWrite(IN2, LOW);
+} //reverse motor A
+
+void motorReverseB()
+{
+  digitalWrite(IN3, LOW);
+  
+  digitalWrite(IN4, HIGH);
+} //reverse motor B
+
+void stallA()
+{
+  digitalWrite(IN1, LOW);
+  
+  digitalWrite(IN2, LOW);
+} //stall motor A
+
+void stallB()
+{
+  digitalWrite(IN3, LOW);
+  
+  digitalWrite(IN4, LOW);
+} //stall motor B
+
+void robotForward()
+{
+  //PWM to limit speed
+  analogWrite(ENA, 50);
+  
+  analogWrite(ENB, 50);
+  
+  motorForwardA();
+  
+  motorForwardB();
+} //robot forward
+
+void stallRobot()
+{
+  stallA();
+  
+  stallB();
+} //stall robot
+
+void turnRight()
+{
+  motorForwardA();
+  
+  motorReverseB();
+  
+  delay(turnDelay);
+  
+  stallRobot();
+  
+  delay(200);
+  
+} //turn the robot right
+
+void turnLeft()
+{
+  motorForwardB();
+  
+  motorReverseA();
+  
+  delay(turnDelay);
+  
+  stallRobot();
+  
+  delay(200);
+  
+} //turn the robot left

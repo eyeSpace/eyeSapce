@@ -1,0 +1,4 @@
+[10-Apr-2015 09:09:28] PHP Warning:  include_once(include/config.php) [<a href='function.include-once'>function.include-once</a>]: failed to open stream: No such file or directory in /home/a1799424/public_html/uploads/index.php on line 183
+[10-Apr-2015 09:09:28] PHP Warning:  include_once() [<a href='function.include'>function.include</a>]: Failed opening 'include/config.php' for inclusion (include_path='.:/usr/lib/php:/usr/local/lib/php') in /home/a1799424/public_html/uploads/index.php on line 183
+[10-Apr-2015 09:09:28] PHP Warning:  mysql_query() [<a href='function.mysql-query'>function.mysql-query</a>]: Access denied for user 'a1799424'@'localhost' (using password: NO) in /home/a1799424/public_html/uploads/index.php on line 184
+[10-Apr-2015 09:09:28] PHP Warning:  mysql_query() [<a href='function.mysql-query'>function.mysql-query</a>]: A link to the server could not be established in /home/a1799424/public_html/uploads/index.php on line 184
